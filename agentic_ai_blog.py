@@ -18,13 +18,13 @@ class OpenAIClient:
     """A compatibility wrapper for OpenAI and OpenRouter Python SDKs."""
 
     def __init__(self):
-        self.api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
         if not self.api_key:
             raise RuntimeError(
-                "Missing API key. Set OPENAI_API_KEY or OPENROUTER_API_KEY in .env or environment."
+                "Missing API key. Set OPENROUTER_API_KEY in .env or environment."
             )
 
-        self.api_base = os.getenv("OPENAI_API_BASE") or os.getenv("OPENROUTER_API_BASE") or DEFAULT_OPENROUTER_BASE
+        self.api_base = os.getenv("OPENROUTER_API_BASE") or DEFAULT_OPENROUTER_BASE
         self.default_model = os.getenv("AGENTIC_AI_MODEL", DEFAULT_CHAT_MODEL)
         self.client = None
 
@@ -34,7 +34,7 @@ class OpenAIClient:
             openai.api_key = self.api_key
             openai.api_base = self.api_base
             if os.getenv("OPENAI_API_KEY") and not os.getenv("OPENAI_API_BASE"):
-                openai.api_base = "https://api.openai.com/v1"
+                openai.api_base = "https://openrouter.ai/api/v1"
 
     def create_chat_completion(
         self,
