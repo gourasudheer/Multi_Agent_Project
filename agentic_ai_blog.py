@@ -32,8 +32,19 @@ class OpenAIClient:
         self.default_model = os.getenv("AGENTIC_AI_MODEL", DEFAULT_CHAT_MODEL)
         self.client = None
 
-        openai.api_key = self.api_key
-        openai.api_base = self.api_base
+        if hasattr(openai, "OpenAI"):
+            try:
+                self.client = openai.OpenAI(api_key=self.api_key, base_url=self.api_base)
+            except TypeError:
+                try:
+                    self.client = openai.OpenAI(api_key=self.api_key, api_base=self.api_base)
+                except TypeError:
+                    self.client = openai.OpenAI()
+                    setattr(self.client, "api_key", self.api_key)
+                    setattr(self.client, "api_base", self.api_base)
+        else:
+            openai.api_key = self.api_key
+            openai.api_base = self.api_base
 
     def create_chat_completion(
         self,
@@ -44,12 +55,20 @@ class OpenAIClient:
     ) -> str:
         model = model or self.default_model
 
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        if self.client is not None and hasattr(self.client, "chat") and hasattr(self.client.chat, "completions"):
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        else:
+            response = openai.ChatCompletion.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
 
         if not response:
             raise RuntimeError("Empty response from the LLM provider.")
